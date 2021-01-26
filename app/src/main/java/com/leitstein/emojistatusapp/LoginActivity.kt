@@ -26,9 +26,6 @@ class LoginActivity : AppCompatActivity() {
         private const val RC_GOOGLE_SIGN_IN = 4926
     }
 
-
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
