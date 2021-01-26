@@ -4,6 +4,8 @@ import android.content.DialogInterface
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.InputFilter
+import android.text.Spanned
 import android.util.Log
 import android.view.*
 import android.widget.EditText
@@ -30,6 +32,24 @@ class MainActivity : AppCompatActivity() {
 
     private companion object {
         private const val TAG = "MainActivity"
+        private val VALID_CHAR_TYPES = listOf(
+            Character.NON_SPACING_MARK, // 6
+            Character.DECIMAL_DIGIT_NUMBER, // 9
+            Character.LETTER_NUMBER, // 10
+            Character.OTHER_NUMBER, // 11
+            Character.SPACE_SEPARATOR, // 12
+            Character.FORMAT, // 16
+            Character.SURROGATE, // 19
+            Character.DASH_PUNCTUATION, // 20
+            Character.START_PUNCTUATION, // 21
+            Character.END_PUNCTUATION, // 22
+            Character.CONNECTOR_PUNCTUATION, // 23
+            Character.OTHER_PUNCTUATION, // 24
+            Character.MATH_SYMBOL, // 25
+            Character.CURRENCY_SYMBOL, //26
+            Character.MODIFIER_SYMBOL, // 27
+            Character.OTHER_SYMBOL // 28
+        ).map { it.toInt() }.toSet()
     }
 
     private lateinit var auth: FirebaseAuth
@@ -94,9 +114,33 @@ class MainActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+    inner class EmojiFilter : InputFilter {
+        override fun filter(source: CharSequence?, start: Int, end: Int, dest: Spanned?,
+            dstart: Int, dend: Int): CharSequence {
+            // if the added text is valid, return source otherwise return ""
+            if (source == null || source.isBlank())             {
+                return ""
+            }
+            Log.i(TAG, "Added tet $source, it has a length ${source.length} characters")
+            for (inputChar in source) {
+                val type = Character.getType(inputChar)
+                Log.i(TAG, "Character Type $type")
+                if (!VALID_CHAR_TYPES.contains(type)) {
+                    val toast = Toast.makeText(this@MainActivity, "Only emojis are allow!", Toast.LENGTH_SHORT)
+                    toast.setGravity(Gravity.TOP, 0, 0)
+                    toast.show()
+                    return ""
+                }
+            }
+            return source
+        }
+    }
+
     private fun showAlertDialog() {
         val editText = EditText(this)
-        // TODO: restrict input length and only to emojis
+        val emojiFilter = EmojiFilter()
+        val lengthFilter = InputFilter.LengthFilter(9)
+        editText.filters = arrayOf(lengthFilter, emojiFilter)
         val dialog = AlertDialog.Builder(this)
             .setTitle("Update your emojis")
             .setView(editText)
